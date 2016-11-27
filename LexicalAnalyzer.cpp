@@ -2,12 +2,13 @@
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
+#include "LexicalAnalyzer.h"
 
 #define maxlen 10	// 关键词的最大长度（包括'\0'）
 #define E 2.7182818	// e的定义
 
 char expr[300], token[30];	// 源程序，等待查询关键词表的字符串
-int pos = 0;	// 读字符指针
+int pos = 0, pre_as_attr = 0;	// 读字符指针，前一个字符串是否具有被加减的属性
 char ch = 0;	// 当前读进的源程序字符
 
 // 关键词表
@@ -65,14 +66,93 @@ void retract()
 	pos--;
 }
 
+// 判断前一个字符串是否可以被加减
+// 输入：int code 前一个字符串的编码
+// 输出：bool 判断结果
+int canAddOrSubtract(int code)
+{
+	// 只有标识符和数字具有可加减性
+	if (code == 10 || code == 20)
+		return true;
+	else
+		return false;
+}
+
+void processNumber()
+{
+	// 处理整数部分
+	while (digit(ch))
+	{
+		concat();
+		getch();
+	}
+	// 处理小数部分
+	if (ch == '.')
+	{
+		concat();
+		getch();
+
+		// 获取小数
+		if (digit(ch))
+		{
+			while (digit(ch))
+			{
+				concat();
+				getch();
+			}
+		}
+		else {
+			// 处理底数没有小数部分错误：12.e3
+			retract();
+			error("no fractional part");
+			return;
+		}
+	}
+	// 处理指数部分
+	if (ch == 'e')
+	{
+		concat();
+		getch();
+
+		// 连接指数符号
+		if (ch == '+' || ch == '-')
+		{
+			concat();
+			getch();
+		}
+		// 连接指数
+		if (digit(ch))
+		{
+			while (digit(ch))
+			{
+				concat();
+				getch();
+			}
+		}
+	}
+	retract();
+	pre_as_attr = 20;
+	printf("(20,%f)\n", dtb());
+}
+
 // 十进制转换函数
 // 将token中的数字串(12.13e-1)转换为数字，并返回
-// 输出：float result 数字串对应的数字
-float dtb()
+// 输出：double result 数字串对应的数字
+double dtb()
 {
 	double result, tmp = 0;	// 最终结果，运算中间结果
-	int tail = 0;	// 位置指针
+	int tail = 0,  base_sign = 1;	// 位置指针，底数的符号
 
+	// 获取底数符号值
+	if (token[tail] == '+')
+	{
+		tail++;
+	}
+	else if (token[tail] == '-')
+	{
+		base_sign = -1;
+		tail++;
+	}
 	// 处理整数部分
 	while (digit(token[tail]))
 	{
@@ -96,7 +176,7 @@ float dtb()
 	// 处理指数部分
 	if (token[tail] == 'e')
 	{
-		int i = 0, sign = 1, index = 1;	// 临时变量，指数正负号，指数值（默认为1）
+		int i = 0, index_sign = 1, index = 1;	// 临时变量，指数正负号，指数值（默认为1）
 		tail++;
 
 		// 获取指数符号值
@@ -106,7 +186,7 @@ float dtb()
 		}
 		else if (token[tail] == '-')
 		{
-			sign = -1;
+			index_sign = -1;
 			tail++;
 		}
 		// 处理指数值
@@ -116,7 +196,7 @@ float dtb()
 			i = index;	// 保证在指数值默认为1的情况下，第1次循环可以有10*0
 			tail++;
 		}
-		tmp = tmp * pow(E, sign * index);	// 将底数与指数进行运算
+		tmp = base_sign * tmp * pow(E, index_sign * index);	// 将底数与指数进行运算
 	}
 
 	result = tmp;
@@ -154,6 +234,8 @@ void scaner()
 {
 	int c = 0;
 	memset(token, 0, sizeof(token) / sizeof(char));	// 将token置空
+	int pre_as_attr_use = pre_as_attr;
+	pre_as_attr = 0;
 
 	getch();
 	getbc();
@@ -173,64 +255,14 @@ void scaner()
 			printf("(%d,%s)\n", c, token);
 		}
 		else {
+			pre_as_attr = 10;
 			printf("(10,%s)\n", token);
 		}
 	}
 	// 处理没有正负号的数字
 	else if (digit(ch))
 	{
-		// 处理整数部分
-		while (digit(ch))
-		{
-			concat();
-			getch();
-		}
-		// 处理小数部分
-		if (ch == '.')
-		{
-			concat();
-			getch();
-			
-			// 获取小数
-			if (digit(ch))
-			{
-				while (digit(ch))
-				{
-					concat();
-					getch();
-				}
-			}
-			else {
-				// 处理底数没有小数部分错误：12.e3
-				retract();
-				error("no fractional part");
-				return;
-			}
-		}
-		// 处理指数部分
-		if (ch == 'e')
-		{
-			concat();
-			getch();
-
-			// 连接指数符号
-			if (ch == '+' || ch == '-')
-			{
-				concat();
-				getch();
-			}
-			// 连接指数
-			if (digit(ch))
-			{
-				while (digit(ch))
-				{
-					concat();
-					getch();
-				}
-			}
-		}
-		retract();
-		printf("(20,%f)\n", dtb());
+		processNumber();
 	}
 	else switch (ch)
 	{
@@ -242,8 +274,41 @@ void scaner()
 			retract();
 			printf("(21,-)\n");
 			break;
-		case'+': printf("(22,-)\n"); break;
-		case'-': printf("(23,-)\n"); break;
+		case'+':
+		case'-':
+			char opr;
+			opr = ch;
+			getch();
+			if (digit(ch))
+			{
+				if (canAddOrSubtract(pre_as_attr_use))
+				{
+					if (opr == '+')
+						printf("(22,-)\n");
+					else if (opr == '-')
+						printf("(23,-)\n");
+					
+					retract();
+					break;
+				}
+				else {
+					retract();
+					retract();
+					getch();
+					concat();
+					// 获取第一个数字，并转数字处理函数
+					getch();
+ 					processNumber();
+					break;
+				}
+			}
+			else {
+				if (opr == '+')
+					printf("(22,-)\n");
+				else if (opr == '-')
+					printf("(23,-)\n");
+				break;
+			}
 		case'*': printf("(24,-)\n"); break;
 		case'/': printf("(25,-)\n"); break;
 		case'(': printf("(26,-)\n"); break;
