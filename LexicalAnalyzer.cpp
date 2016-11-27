@@ -1,8 +1,10 @@
 #define _CRT_SECURE_NO_DEPRECATE
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 
 #define maxlen 10	// 关键词的最大长度（包括'\0'）
+#define E 2.7182818	// e的定义
 
 char expr[300], token[30];	// 源程序，等待查询关键词表的字符串
 int pos = 0;	// 读字符指针
@@ -64,19 +66,59 @@ void retract()
 }
 
 // 十进制转换函数
-// 将token中的数字串转换为数字，并返回
-// 输出：int result 数字串对应的数字
-int dtb()
+// 将token中的数字串(12.13e-1)转换为数字，并返回
+// 输出：float result 数字串对应的数字
+float dtb()
 {
-	int result, tmp, tail = 0;
+	double result, tmp = 0;	// 最终结果，运算中间结果
+	int tail = 0;	// 位置指针
 
-	tmp = token[tail] - '0';
-	tail++;
-	while (token[tail])
+	// 处理整数部分
+	while (digit(token[tail]))
 	{
-		tmp = tmp * 10 + token[tail] - '0';
+		tmp = tmp * 10 + token[tail] - '0';	// 累加整数
 		tail++;
 	}
+	// 处理小数部分
+	if (token[tail] == '.')
+	{
+		int i = 1;
+		tail++;
+
+		// 累加小数
+		while (digit(token[tail]))
+		{
+			tmp = tmp + (token[tail] - '0') * pow(10, -i);
+			i++;
+			tail++;
+		}
+	}
+	// 处理指数部分
+	if (token[tail] == 'e')
+	{
+		int i = 0, sign = 1, index = 1;	// 临时变量，指数正负号，指数值（默认为1）
+		tail++;
+
+		// 获取指数符号值
+		if (token[tail] == '+')
+		{
+			tail++;
+		}
+		else if (token[tail] == '-')
+		{
+			sign = -1;
+			tail++;
+		}
+		// 处理指数值
+		while (digit(token[tail]))
+		{
+			index = i * 10 + token[tail] - '0';	// 累加指数值
+			i = index;	// 保证在指数值默认为1的情况下，第1次循环可以有10*0
+			tail++;
+		}
+		tmp = tmp * pow(E, sign * index);	// 将底数与指数进行运算
+	}
+
 	result = tmp;
 	return result;
 }
@@ -99,10 +141,11 @@ int reverse()
 	return 10;
 }
 
-// 出错
-void error()
+// 出错处理函数
+// 输入：char *message 错误信息
+void error(char *message)
 {
-	printf("Error: word not regnized...\n");
+	printf("Error: %s...\n", message);
 }
 
 // 词法分析函数
@@ -115,6 +158,7 @@ void scaner()
 	getch();
 	getbc();
 
+	// 处理关键词和标识符
 	if (letter(ch))
 	{
 		while (letter(ch) || digit(ch))
@@ -132,15 +176,61 @@ void scaner()
 			printf("(10,%s)\n", token);
 		}
 	}
+	// 处理没有正负号的数字
 	else if (digit(ch))
 	{
+		// 处理整数部分
 		while (digit(ch))
 		{
 			concat();
 			getch();
 		}
+		// 处理小数部分
+		if (ch == '.')
+		{
+			concat();
+			getch();
+			
+			// 获取小数
+			if (digit(ch))
+			{
+				while (digit(ch))
+				{
+					concat();
+					getch();
+				}
+			}
+			else {
+				// 处理底数没有小数部分错误：12.e3
+				retract();
+				error("no fractional part");
+				return;
+			}
+		}
+		// 处理指数部分
+		if (ch == 'e')
+		{
+			concat();
+			getch();
+
+			// 连接指数符号
+			if (ch == '+' || ch == '-')
+			{
+				concat();
+				getch();
+			}
+			// 连接指数
+			if (digit(ch))
+			{
+				while (digit(ch))
+				{
+					concat();
+					getch();
+				}
+			}
+		}
 		retract();
-		printf("(20,%d)\n", dtb());
+		printf("(20,%f)\n", dtb());
 	}
 	else switch (ch)
 	{
@@ -184,10 +274,10 @@ void scaner()
 				printf("(37,-)\n");	break;
 			}
 			retract();
-			error();
+			error("single char ! not defined");
 			break;
 		case'#': printf("(0,-)\n"); break;
-		default: error();
+		default: error("word not regnized");
 			break;
 	}
 }
@@ -195,19 +285,32 @@ void scaner()
 int main()
 {
 	int len = 0;
-	
-	printf("按5可奉告，按E可赛艇:\n=> ");
 
-	// 可以读取包含空格的整个字符串
-	gets_s(expr);
-	//scanf("%s", expr);
-	
-	len = strlen(expr);	// 源程序字符串长度
-	while (pos < len)
+	while (1)
 	{
-		// 调用词法分析函数
-		scaner();
-	}
+		printf("按5可奉告，按E可赛艇：\n=> ");
 
-	printf("Done\n");
+		// gets_s可以读取包含空格的整个字符串
+		gets_s(expr);
+		if (strcmp(expr, "quit") == 0)
+		{
+			break;
+		}
+		//scanf("%s", expr);
+		printf("------Exec------\n");
+	
+		len = strlen(expr);	// 源程序字符串长度
+		while (pos < len)
+		{
+			// 调用词法分析函数
+			scaner();
+		}
+
+		memset(expr, 0, sizeof(expr) / sizeof(char));	// 将expr置空
+		pos = 0;
+		ch = 0;
+		printf("------Done------\n\n");
+	}
+	
+	printf("\nExiting...\n");
 }
