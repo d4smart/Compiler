@@ -60,6 +60,17 @@ void concat()
 	token[tail] = ch;
 }
 
+// 清空tail的最后一个字符
+void removeTail()
+{
+	int tail = 0;
+	while (token[tail])
+	{
+		tail++;
+	}
+	token[tail - 1] = 0;
+}
+
 // 字符指针回退一个字符
 void retract()
 {
@@ -131,11 +142,15 @@ void processNumber()
 				getch();
 			}
 		}
+		else {
+			removeTail();	// 将多取的token的最后一个字符置0
+			retract();	// 多回退一次
+		}
 	}
 
 	retract();
 	pre_as_attr = 20;
-	printf("(20,%f)\n", dtb());
+	printf("(20,%f,%s)\n", dtb(), token);
 }
 
 // 十进制转换函数
@@ -176,6 +191,7 @@ double dtb()
 			tail++;
 		}
 	}
+	tmp = base_sign * tmp;
 	// 处理指数部分
 	if (token[tail] == 'e')
 	{
@@ -199,7 +215,7 @@ double dtb()
 			i = index;	// 保证在指数值默认为1的情况下，第1次循环可以有10*0
 			tail++;
 		}
-		tmp = base_sign * tmp * pow(E, index_sign * index);	// 最复杂情况下，将底数符号，底数与指数进行乘法运算
+		tmp = tmp * pow(E, index_sign * index);	// 最复杂情况下，将底数与指数进行乘法运算
 	}
 
 	result = tmp;
@@ -272,10 +288,10 @@ void scaner()
 		case'=': getch();
 			if (ch == '=')
 			{
-				printf("(36,-)\n");	break;
+				printf("(36,==)\n");	break;
 			}
 			retract();
-			printf("(21,-)\n");
+			printf("(21,=)\n");
 			break;
 		case'+':
 		case'-':
@@ -293,7 +309,7 @@ void scaner()
 					// 加减运算符处理
 					retract();
 					if (opr == '+')
-						printf("(22,-)\n");
+						printf("(22,+)\n");
 					else if (opr == '-')
 						printf("(23,-)\n");
 					break;
@@ -316,44 +332,44 @@ void scaner()
 				// +/- 后面不是数字的一般情况
 				retract();
 				if (opr == '+')
-					printf("(22,-)\n");
+					printf("(22,+)\n");
 				else if (opr == '-')
 					printf("(23,-)\n");
 				break;
 			}
-		case'*': printf("(24,-)\n"); break;
-		case'/': printf("(25,-)\n"); break;
-		case'(': printf("(26,-)\n"); break;
-		case')': printf("(27,-)\n"); break;
-		case'{': printf("(28,-)\n"); break;
-		case'}': printf("(29,-)\n"); break;
-		case',': printf("(30,-)\n"); break;
-		case';': printf("(31,-)\n"); break;
+		case'*': printf("(24,*)\n"); break;
+		case'/': printf("(25,/)\n"); break;
+		case'(': printf("(26,()\n"); break;
+		case')': printf("(27,))\n"); break;
+		case'{': printf("(28,{)\n"); break;
+		case'}': printf("(29,})\n"); break;
+		case',': printf("(30,,)\n"); break;
+		case';': printf("(31,;)\n"); break;
 		case'>': getch();
 			if (ch == '=')
 			{
-				printf("(33,-)\n");	break;
+				printf("(33,>=)\n");	break;
 			}
 			retract();
-			printf("(32,-)\n");
+			printf("(32,>)\n");
 			break;
 		case'<': getch();
 			if (ch == '=') 
 			{
-				printf("(35,-)\n");	break;
+				printf("(35,<=)\n");	break;
 			}
 			retract();
-			printf("(34,-)\n");
+			printf("(34,<)\n");
 			break;
 		case'!': getch();
 			if (ch == '=')
 			{
-				printf("(37,-)\n");	break;
+				printf("(37,!=)\n");	break;
 			}
 			retract();
 			error("single char ! not defined");
 			break;
-		case'#': printf("(0,-)\n"); break;
+		case'#': printf("(0,#)\n"); break;
 		default: error("word not regnized");
 			break;
 	}

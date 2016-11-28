@@ -4,6 +4,7 @@ int digit(char ch);
 void getch();
 void getbc();
 void concat();
+void removeTail();
 void retract();
 int canAddOrSubtract(int code);
 void processNumber();
