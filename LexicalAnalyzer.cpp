@@ -78,6 +78,8 @@ int canAddOrSubtract(int code)
 		return false;
 }
 
+// 数字处理函数
+// 处理数字的各个部分
 void processNumber()
 {
 	// 处理整数部分
@@ -130,6 +132,7 @@ void processNumber()
 			}
 		}
 	}
+
 	retract();
 	pre_as_attr = 20;
 	printf("(20,%f)\n", dtb());
@@ -196,7 +199,7 @@ double dtb()
 			i = index;	// 保证在指数值默认为1的情况下，第1次循环可以有10*0
 			tail++;
 		}
-		tmp = base_sign * tmp * pow(E, index_sign * index);	// 将底数与指数进行运算
+		tmp = base_sign * tmp * pow(E, index_sign * index);	// 最复杂情况下，将底数符号，底数与指数进行乘法运算
 	}
 
 	result = tmp;
@@ -276,24 +279,31 @@ void scaner()
 			break;
 		case'+':
 		case'-':
+			// 数字正负号与运算符加减的处理
 			char opr;
-			opr = ch;
+			opr = ch;	// 记录运算符
+
 			getch();
+			// 当且仅当符号后一位为数字时，符号可能为正负号
 			if (digit(ch))
 			{
+				// 数字前一位具有可被加减的性质，则是运算符加减；否则是正负号
 				if (canAddOrSubtract(pre_as_attr_use))
 				{
+					// 加减运算符处理
+					retract();
 					if (opr == '+')
 						printf("(22,-)\n");
 					else if (opr == '-')
 						printf("(23,-)\n");
-					
-					retract();
 					break;
 				}
-				else {
+				else {	
+					// 正负号处理
 					retract();
 					retract();
+
+					// 获取正负号并连接
 					getch();
 					concat();
 					// 获取第一个数字，并转数字处理函数
@@ -303,6 +313,8 @@ void scaner()
 				}
 			}
 			else {
+				// +/- 后面不是数字的一般情况
+				retract();
 				if (opr == '+')
 					printf("(22,-)\n");
 				else if (opr == '-')
@@ -374,6 +386,7 @@ int main()
 		memset(expr, 0, sizeof(expr) / sizeof(char));	// 将expr置空
 		pos = 0;
 		ch = 0;
+		pre_as_attr = 0;
 		printf("------Done------\n\n");
 	}
 	
