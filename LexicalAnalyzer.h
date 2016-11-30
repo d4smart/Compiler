@@ -2,6 +2,8 @@
 int letter(char ch);
 int digit(char ch);
 void processInput();
+void strCutting(char *str, int start, int end);
+void removeComments();
 void getch();
 void getbc();
 void concat();

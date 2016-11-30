@@ -66,6 +66,69 @@ void processInput()
 			i++;
 		}
 	}
+	while (expr[--i] == ' ')
+	{
+		expr[i] = 0;
+	}
+}
+
+// 字符串切割函数
+// 去除str中开始位置start（包含）到结束位置end（不包含）的字符
+// 输入：char *str 字符指针，int start 开始位置，int end 结束位置
+void strCutting(char *str, int start, int end)
+{
+	if (start >= end) return;
+	
+	while (*(str + start) != 0)
+	{
+		*(str + start) = *(str + end);
+		start++;
+		end++;
+	}
+}
+
+// 去除注释函数
+// 去除代码中从"/*"到"*/"之间的内容
+void removeComments()
+{
+	int i = 0, start = -1, end = 0;
+	char c = 0;
+	
+	while ((c = expr[i]) != 0)
+	{
+		if (c == '/')
+		{
+			start = i;
+			c = expr[++i];
+			if (c == '*')
+			{
+				c = expr[++i];
+
+				state3:
+				while (c != '*')
+				{
+					if (c == 0) return;
+					c = expr[++i];
+				}
+				c = expr[++i];
+				
+				while (c == '*')
+				{
+					c = expr[++i];
+				}
+				if (c == '/')
+				{
+					end = i + 1;
+					strCutting(expr, start, end);
+					i = start - 1;
+				}
+				else {
+					goto state3;
+				}
+			}
+		}
+		i++;
+	}
 }
 
 // 读字符函数
@@ -421,6 +484,7 @@ int main()
 		printf("按5可奉告，按E可赛艇：\n=> ");
 
 		processInput();
+		removeComments();
 
 		if (strcmp(expr, "quit") == 0)
 		{
