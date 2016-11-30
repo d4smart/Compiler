@@ -1,6 +1,7 @@
 #pragma once
 int letter(char ch);
 int digit(char ch);
+void processInput();
 void getch();
 void getbc();
 void concat();

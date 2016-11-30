@@ -19,7 +19,7 @@ char keywords[][maxlen] = {"main", "int", "float", "double", "char", "if", "else
 // 输出：bool 字符是否为字母
 int letter(char ch)
 {
-	return ch >= 'A' && ch <= 'z' ? true : false;
+	return (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') ? true : false;
 }
 
 // 判断字符是否为数字
@@ -28,6 +28,44 @@ int letter(char ch)
 int digit(char ch)
 {
 	return ch >= '0' && ch <= '9' ? true : false;
+}
+
+// 输入处理函数
+// 对输入的字符串预处理：去除多余空格，Tab字符，回车换行符
+void processInput()
+{
+	int i = 0, preIsSpace = 0, isStart = 1;
+	char c;
+
+	while ((c = getchar()) != '#')
+	{
+		// 输入流开头的空格，Tab字符，回车换行符直接跳过
+		if (isStart)
+		{
+			if (c == ' ' || c == '\t' || c == '\n')
+			{
+				continue;
+			}
+			isStart = 0;
+		}
+		
+		// 去除多余空格，Tab字符，回车换行符
+		if (c == ' ' || c == '\t' || c == '\n')
+		{
+			if (preIsSpace)
+			{
+				continue;
+			}
+			expr[i] = ' ';
+			preIsSpace = 1;
+			i++;
+		}
+		else {
+			expr[i] = c;
+			preIsSpace = 0;
+			i++;
+		}
+	}
 }
 
 // 读字符函数
@@ -258,7 +296,9 @@ void scaner()
 
 	getch();
 	getbc();
+	if (ch == 0) return;	// 到达输入末尾
 
+	char opr = ch;	// 记录读入的字符
 	// 处理关键词和标识符
 	if (letter(ch))
 	{
@@ -296,9 +336,6 @@ void scaner()
 		case'+':
 		case'-':
 			// 数字正负号与运算符加减的处理
-			char opr;
-			opr = ch;	// 记录运算符
-
 			getch();
 			// 当且仅当符号后一位为数字时，符号可能为正负号
 			if (digit(ch))
@@ -369,7 +406,7 @@ void scaner()
 			retract();
 			error("single char ! not defined");
 			break;
-		case'#': printf("(0,#)\n"); break;
+		case' ': break;
 		default: error("word not regnized");
 			break;
 	}
@@ -383,15 +420,15 @@ int main()
 	{
 		printf("按5可奉告，按E可赛艇：\n=> ");
 
-		// gets_s可以读取包含空格的整个字符串
-		gets_s(expr);
+		processInput();
+
 		if (strcmp(expr, "quit") == 0)
 		{
 			break;
 		}
-		//scanf("%s", expr);
+		
 		printf("------Exec------\n");
-	
+
 		len = strlen(expr);	// 源程序字符串长度
 		while (pos < len)
 		{
