@@ -1,11 +1,9 @@
-#define _CRT_SECURE_NO_DEPRECATE
-#include <stdio.h>
-#include <string.h>
+#include "common.h"
 #include <math.h>
 #include "LexicalAnalyzer.h"
 
 #define maxlen 10	// 关键词的最大长度（包括'\0'）
-#define E 2.7182818	// e的定义
+#define E 10	// e的定义
 
 char expr[300], token[30];	// 源程序，等待查询关键词表的字符串
 int pos = 0, pre_as_attr = 0;	// 读字符指针，前一个字符串是否具有被加减的属性
@@ -475,37 +473,37 @@ void scaner()
 	}
 }
 
-int main()
-{
-	int len = 0;
-
-	while (1)
-	{
-		printf("按5可奉告，按E可赛艇：\n=> ");
-
-		processInput();
-		removeComments();
-
-		if (strcmp(expr, "quit") == 0)
-		{
-			break;
-		}
-		
-		printf("------Exec------\n");
-
-		len = strlen(expr);	// 源程序字符串长度
-		while (pos < len)
-		{
-			// 调用词法分析函数
-			scaner();
-		}
-
-		memset(expr, 0, sizeof(expr) / sizeof(char));	// 将expr置空
-		pos = 0;
-		ch = 0;
-		pre_as_attr = 0;
-		printf("------Done------\n\n");
-	}
-	
-	printf("\nExiting...\n");
-}
+//int main()
+//{
+//	int len = 0;
+//
+//	while (1)
+//	{
+//		printf("按5可奉告，按E可赛艇：\n=> ");
+//
+//		processInput();
+//		removeComments();
+//
+//		if (strcmp(expr, "quit") == 0)
+//		{
+//			break;
+//		}
+//		
+//		printf("------Exec------\n");
+//
+//		len = strlen(expr);	// 源程序字符串长度
+//		while (pos < len)
+//		{
+//			// 调用词法分析函数
+//			scaner();
+//		}
+//
+//		memset(expr, 0, sizeof(expr) / sizeof(char));	// 将expr置空
+//		pos = 0;
+//		ch = 0;
+//		pre_as_attr = 0;
+//		printf("------Done------\n\n");
+//	}
+//	
+//	printf("\nExiting...\n");
+//}
