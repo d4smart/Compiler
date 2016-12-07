@@ -9,6 +9,7 @@ int predictTable[sizeof(nonTerminator) / sizeof(char)][sizeof(terminator) / size
 	{ 0, 0, 0, 6, 5 }
 };
 
+stack<char> analyzeStack;	// 分析栈
 char input[100];
 char a = 0, X = 0;
 int posi = 0;

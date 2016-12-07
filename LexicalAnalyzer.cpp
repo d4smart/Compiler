@@ -1,9 +1,5 @@
 #include "common.h"
-#include <math.h>
 #include "LexicalAnalyzer.h"
-
-#define maxlen 10	// 关键词的最大长度（包括'\0'）
-#define E 10	// e的定义
 
 char expr[300], token[30];	// 源程序，等待查询关键词表的字符串
 int pos = 0, pre_as_attr = 0;	// 读字符指针，前一个字符串是否具有被加减的属性
@@ -190,7 +186,7 @@ int canAddOrSubtract(int code)
 
 // 数字处理函数
 // 处理数字的各个部分
-void processNumber()
+double processNumber()
 {
 	// 处理整数部分
 	while (digit(ch))
@@ -217,7 +213,7 @@ void processNumber()
 			// 处理底数没有小数部分错误：12.e3
 			retract();
 			error("no fractional part");
-			return;
+			return 404;
 		}
 	}
 	// 处理指数部分
@@ -249,7 +245,8 @@ void processNumber()
 
 	retract();
 	pre_as_attr = 20;
-	printf("(20,%f,%s)\n", dtb(), token);
+	//printf("(20,%f,%s)\n", dtb(), token);
+	return dtb();
 }
 
 // 十进制转换函数
@@ -348,16 +345,17 @@ void error(char *message)
 
 // 词法分析函数
 // 读取源程序，获取一个单词，返回（打印）单词符号串
-void scaner()
+Word *scaner()
 {
 	int c = 0;
 	memset(token, 0, sizeof(token) / sizeof(char));	// 将token置空
+	Word *word = (Word*)malloc(sizeof(Word));
 	int pre_as_attr_use = pre_as_attr;
 	pre_as_attr = 0;
 
 	getch();
 	getbc();
-	if (ch == 0) return;	// 到达输入末尾
+	if (ch == 0) return NULL;	// 到达输入末尾
 
 	char opr = ch;	// 记录读入的字符
 	// 处理关键词和标识符
@@ -372,30 +370,36 @@ void scaner()
 		c = reverse();
 		if (c != 10)
 		{
-			printf("(%d,%s)\n", c, token);
+			//printf("(%d,%s)\n", c, token);
+			word->code = c;
+			return word;
 		}
 		else {
 			pre_as_attr = 10;
-			printf("(10,%s)\n", token);
+			word->code = 10; strcpy(word->str, token);
+			return word;
 		}
 	}
 	// 处理没有正负号的数字
 	else if (digit(ch))
 	{
-		processNumber();
+		double value = processNumber();
+		word->code = 20; word->value = value;
+		return word;
 	}
 	else switch (ch)
 	{
-		case'=': getch();
+		case '=': getch();
 			if (ch == '=')
 			{
-				printf("(36,==)\n");	break;
+				word->code = 36;
+				return word;
 			}
 			retract();
-			printf("(21,=)\n");
-			break;
-		case'+':
-		case'-':
+			word->code = 21;
+			return word;
+		case '+':
+		case '-':
 			// 数字正负号与运算符加减的处理
 			getch();
 			// 当且仅当符号后一位为数字时，符号可能为正负号
@@ -407,10 +411,15 @@ void scaner()
 					// 加减运算符处理
 					retract();
 					if (opr == '+')
-						printf("(22,+)\n");
+					{
+						word->code = 22;
+						return word;
+					}
 					else if (opr == '-')
-						printf("(23,-)\n");
-					break;
+					{
+						word->code = 23;
+						return word;
+					}
 				}
 				else {	
 					// 正负号处理
@@ -422,88 +431,78 @@ void scaner()
 					concat();
 					// 获取第一个数字，并转数字处理函数
 					getch();
- 					processNumber();
-					break;
+ 					double value = processNumber();
+					word->code = 20; word->value = value;
+					return word;
 				}
 			}
 			else {
 				// +/- 后面不是数字的一般情况
 				retract();
 				if (opr == '+')
-					printf("(22,+)\n");
+				{
+					word->code = 22;
+					return word;
+				}
 				else if (opr == '-')
-					printf("(23,-)\n");
-				break;
+				{
+					word->code = 23;
+					return word;
+				}
 			}
-		case'*': printf("(24,*)\n"); break;
-		case'/': printf("(25,/)\n"); break;
-		case'(': printf("(26,()\n"); break;
-		case')': printf("(27,))\n"); break;
-		case'{': printf("(28,{)\n"); break;
-		case'}': printf("(29,})\n"); break;
-		case',': printf("(30,,)\n"); break;
-		case';': printf("(31,;)\n"); break;
-		case'>': getch();
+		case '*': 
+			word->code = 24;
+			return word;
+		case '/': 
+			word->code = 25;
+			return word;
+		case '(': 
+			word->code = 26;
+			return word;
+		case ')': 
+			word->code = 27;
+			return word;
+		case '{': 
+			word->code = 28;
+			return word;
+		case '}': 
+			word->code = 29;
+			return word;
+		case ',': 
+			word->code = 30;
+			return word;
+		case ';': 
+			word->code = 31;
+			return word;
+		case '>': getch();
 			if (ch == '=')
 			{
-				printf("(33,>=)\n");	break;
+				word->code = 33;
+				return word;
 			}
 			retract();
-			printf("(32,>)\n");
-			break;
-		case'<': getch();
+			word->code = 32;
+			return word;
+		case '<': getch();
 			if (ch == '=') 
 			{
-				printf("(35,<=)\n");	break;
+				word->code = 35;
+				return word;
 			}
 			retract();
-			printf("(34,<)\n");
-			break;
-		case'!': getch();
+			word->code = 34;
+			return word;
+		case '!': getch();
 			if (ch == '=')
 			{
-				printf("(37,!=)\n");	break;
+				word->code = 37;
+				return word;
 			}
 			retract();
 			error("single char ! not defined");
-			break;
-		case' ': break;
+			return NULL;
+		case ' ': return NULL;
 		default: error("word not regnized");
-			break;
+			return NULL;
 	}
 }
-
-//int main()
-//{
-//	int len = 0;
-//
-//	while (1)
-//	{
-//		printf("按5可奉告，按E可赛艇：\n=> ");
-//
-//		processInput();
-//		removeComments();
-//
-//		if (strcmp(expr, "quit") == 0)
-//		{
-//			break;
-//		}
-//		
-//		printf("------Exec------\n");
-//
-//		len = strlen(expr);	// 源程序字符串长度
-//		while (pos < len)
-//		{
-//			// 调用词法分析函数
-//			scaner();
-//		}
-//
-//		memset(expr, 0, sizeof(expr) / sizeof(char));	// 将expr置空
-//		pos = 0;
-//		ch = 0;
-//		pre_as_attr = 0;
-//		printf("------Done------\n\n");
-//	}
-//	
-//	printf("\nExiting...\n");
-//}

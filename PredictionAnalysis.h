@@ -5,7 +5,6 @@
 
 using namespace std;
 
-static stack<char> analyzeStack;	// 分析栈
 // 表示语法规则的结构体
 typedef struct rule
 {
@@ -13,7 +12,7 @@ typedef struct rule
 	string right;	// 右部
 } Rule;
 
-extern char input[100];
+extern char input[];
 
 Rule *M(char X, char a);
 void error();
