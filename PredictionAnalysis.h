@@ -8,11 +8,11 @@ using namespace std;
 // 表示语法规则的结构体
 typedef struct rule
 {
-	char left;	// 左部
-	string right;	// 右部
+	char left;	// 左部字符
+	string right;	// 右部字符串
 } Rule;
 
-extern char input[];
+extern Word *input[];
 
 Rule *M(char X, char a);
 void error();

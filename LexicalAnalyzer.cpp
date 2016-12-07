@@ -31,7 +31,7 @@ void processInput()
 	int i = 0, preIsSpace = 0, isStart = 1;
 	char c;
 
-	while ((c = getchar()) != '#')
+	while ((c = getchar()) != '$')
 	{
 		// 输入流开头的空格，Tab字符，回车换行符直接跳过
 		if (isStart)
@@ -340,7 +340,7 @@ int reverse()
 // 输入：char *message 错误信息
 void error(char *message)
 {
-	printf("Error: %s...\n", message);
+	printf("Lexical error: %s...\n", message);
 }
 
 // 词法分析函数
@@ -370,13 +370,12 @@ Word *scaner()
 		c = reverse();
 		if (c != 10)
 		{
-			//printf("(%d,%s)\n", c, token);
 			word->code = c;
 			return word;
 		}
 		else {
 			pre_as_attr = 10;
-			word->code = 10; strcpy(word->str, token);
+			word->code = 10; strcpy(word->str, token);	// 种别码为10，同时记录标识符的字符串
 			return word;
 		}
 	}
@@ -389,6 +388,9 @@ Word *scaner()
 	}
 	else switch (ch)
 	{
+		case '#':
+			word->code = 0;
+			return word;
 		case '=': getch();
 			if (ch == '=')
 			{

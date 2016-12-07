@@ -5,13 +5,6 @@
 #define maxlen 10	// 关键词的最大长度（包括'\0'）
 #define E 10	// e的定义
 
-typedef struct word
-{
-	int code;
-	char str[30];
-	double value;
-} Word;
-
 extern char expr[300];
 extern int pos;
 extern char ch;
