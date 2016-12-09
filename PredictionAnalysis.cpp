@@ -81,6 +81,53 @@ void error()
 	printf("Grammar error...\n");
 }
 
+// 打印分析栈中的内容
+// 将栈里面的内容出栈保存，之后再入栈，以保持函数执行前后栈内内容一致
+void printStack()
+{
+	char str[30] = "";	// 用来保存栈内的内容
+	int i = 0, j = 0;
+	int size = analyzeStack.size();	// 获取栈大小
+	// 栈内的内容出栈保存
+	while (!analyzeStack.empty())
+	{
+		str[size - 1 - i] = analyzeStack.top();	// 逆序保存
+		analyzeStack.pop();
+		i++;
+	}
+	// 恢复栈内的内容
+	while (str[j])
+	{
+		analyzeStack.push(str[j]);	// 入栈恢复
+		j++;
+	}
+	printf("%-16s", str);
+}
+
+// 打印单词数组规约过程中的内容
+// 输入：int pos 单词数组位置指针
+void printInput(int pos)
+{
+	char str[30] = {};
+	int i = 0;
+	while (input[pos])
+	{
+		str[i] = classify(input[pos]);
+		pos++;	i++;
+	}
+	printf("%-24s", str);
+}
+
+// 打印推导使用的文法规则
+void printRules(Rule *rule)
+{
+	if (rule)
+	{
+		string right = rule->right.empty() ? "ε" : rule->right;
+		cout << rule->left << "->" << right;
+	}
+}
+
 // 语法分析表的总控程序
 void master()
 {
@@ -92,6 +139,10 @@ void master()
 	analyzeStack.push('$');
 	analyzeStack.push('E');
 	a = classify(input[posi]);
+
+	// 打印
+	printf("Analyse stack\tInput words\t\tUsed rules\n");
+	printStack();	printInput(posi);	printf("\n");
 
 	while (1)
 	{
@@ -105,6 +156,7 @@ void master()
 			if (X == a)
 			{
 				a = classify(input[++posi]);
+				printStack();	printInput(posi);	printf("\n"); // 打印
 			}
 			else
 			{
@@ -118,7 +170,7 @@ void master()
 		{
 			if (X == a)
 			{
-				printf("Success...\n");	// 语法分析成功
+				printf("Success in grammer analysis...\n");	// 语法分析成功
 				break;
 			}
 			else {
@@ -137,6 +189,7 @@ void master()
 				{
 					analyzeStack.push(right[i]);
 				}
+				printStack();	printInput(posi);	printRules(rule);	printf("\n"); // 打印
 			}
 			else {
 				error();

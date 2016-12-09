@@ -14,6 +14,10 @@ typedef struct rule
 
 extern Word *input[];
 
+char classify(Word *word);
 Rule *M(char X, char a);
 void error();
+void printStack();
+void printInput(int pos);
+void printRules(Rule *rule);
 void master();
