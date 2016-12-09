@@ -43,4 +43,4 @@
 
 1. 语法分析过程
 
-![语法分析过程截图](Static/result2.png)
+![语法分析过程截图](Static/result1.png)
